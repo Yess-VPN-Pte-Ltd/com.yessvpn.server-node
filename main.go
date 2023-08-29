@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"strings"
 	"time"
 )
 
@@ -125,29 +124,9 @@ func ExecuteCmd(name string, arg ...string) error {
 	}
 	<-done
 	err = cmd.Wait()
-	log.Printf("Error wait: %s......", err.Error())
-	return err
-}
-
-func asyncLog(reader io.ReadCloser) error {
-	cache := ""
-	buf := make([]byte, 1024, 1024)
-	for {
-		num, err := reader.Read(buf)
-		if err != nil {
-			if err == io.EOF || strings.Contains(err.Error(), "closed") {
-				err = nil
-			}
-			return err
-		}
-		if num > 0 {
-			oByte := buf[:num]
-			//h.logInfo = append(h.logInfo, oByte...)
-			oSlice := strings.Split(string(oByte), "\n")
-			line := strings.Join(oSlice[:len(oSlice)-1], "\n")
-			fmt.Printf("%s%s\n", cache, line)
-			cache = oSlice[len(oSlice)-1]
-		}
+	if err != nil {
+		log.Printf("Error wait: %s......", err.Error())
+		return err
 	}
-	return nil
+	return err
 }
