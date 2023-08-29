@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/tidwall/gjson"
@@ -108,33 +109,24 @@ func DownloadFile(url string, filepath string) error {
 
 func ExecuteCmd(name string, arg ...string) error {
 	cmd := exec.Command(name, arg...)
-
-	stdout, _ := cmd.StdoutPipe()
-	stderr, _ := cmd.StderrPipe()
-
-	if err := cmd.Start(); err != nil {
-		log.Printf("Error starting command: %s......", err.Error())
+	cmdReader, _ := cmd.StdoutPipe()
+	scanner := bufio.NewScanner(cmdReader)
+	done := make(chan bool)
+	go func() {
+		for scanner.Scan() {
+			fmt.Printf(scanner.Text())
+		}
+		done <- true
+	}()
+	err := cmd.Start()
+	if err != nil {
+		log.Printf("Error start: %s......", err.Error())
 		return err
 	}
-
-	go func() {
-		err := asyncLog(stdout)
-		if err != nil {
-			log.Printf("Error asyncLog: %s......", err.Error())
-		}
-	}()
-	go func() {
-		err := asyncLog(stderr)
-		if err != nil {
-			log.Printf("Error asyncLog: %s......", err.Error())
-		}
-	}()
-
-	if err := cmd.Wait(); err != nil {
-		log.Printf("Error waiting for command execution: %s......", err.Error())
-		return err
-	}
-	return nil
+	<-done
+	err = cmd.Wait()
+	log.Printf("Error wait: %s......", err.Error())
+	return err
 }
 
 func asyncLog(reader io.ReadCloser) error {
