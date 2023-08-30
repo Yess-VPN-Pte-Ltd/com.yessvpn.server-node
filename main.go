@@ -30,7 +30,7 @@ func main() {
 	_ = ExecuteCmd("sh", "-c", "chmod +x ./install_node.sh")
 	err = ExecuteCmd("bash", "-c", "./install_node.sh")
 	if err != nil {
-		fmt.Println(" Install server failed.....")
+		fmt.Println("Install server failed.....")
 		return
 	}
 
@@ -61,10 +61,10 @@ func UpdateConfig() {
 
 	installConfig, err := UnmarshalInstallConfig(byteInstallConfig)
 	if err != nil {
-		fmt.Println("parse install config failed.....")
+		fmt.Println("Parse install config failed.....")
 		return
 	}
-	ProcessJson(byteVpnServerConfig, byteVpnClientConfig, installConfig)
+	byteVpnServerConfig, byteVpnClientConfig = ProcessJson(byteVpnServerConfig, byteVpnClientConfig, installConfig)
 
 	_ = ExecuteCmd("sh", "-c", "chmod +x ./restart.sh")
 	err = ExecuteCmd("bash", "-c", "./restart.sh")
@@ -75,23 +75,27 @@ func UpdateConfig() {
 	}
 	fmt.Println("Start server success.....")
 
-	registerConfig := gjson.GetBytes(byteVpnServerConfig, "outbounds").Array()[0].String()
+	registerConfig := gjson.GetBytes(byteVpnClientConfig, "outbounds").Array()[0].String()
 
-	fmt.Println("register config：" + registerConfig)
+	fmt.Println("register config:\n" + registerConfig)
 	RegisterConfig(address+register, []byte(registerConfig))
 }
 
 func RegisterConfig(url string, body []byte) {
 	post, err := http.Post(url, "application/json", bytes.NewReader(body))
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
+	defer func(Resp *http.Response) {
+		if Resp == nil {
+			fmt.Println("Response is null: " + err.Error())
+			return
+		}
+		err := Resp.Body.Close()
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-	}(post.Body)
+	}(post)
 	if err != nil {
-		fmt.Println("register node field....." + err.Error())
+		fmt.Println("Register node field: " + err.Error())
 		return
 	}
 }

@@ -17,35 +17,45 @@ func ProcessJson(serverConfig []byte, clientConfig []byte, installConfig Install
 	for _, random := range installConfig.ServerConfig.Random {
 		if random.Type != nil {
 			if *random.Type == "guid" {
-				serverConfig, _ = sjson.SetBytes(serverConfig, random.Path, uuid.New().String())
+				serverConfig, err = sjson.SetBytes(serverConfig, random.Path, uuid.New().String())
 			}
-		}
-		if random.Set != nil {
-			serverConfig, _ = sjson.SetBytes(serverConfig, random.Path, random.Set[rand.Intn(len(random.Set))])
-		}
-		if random.Range != nil {
+		} else if random.Set != nil {
+			serverConfig, err = sjson.SetBytes(serverConfig, random.Path, random.Set[rand.Intn(len(random.Set))])
+		} else if random.Range != nil {
 			randomRange := random.Range
-			serverConfig, _ = sjson.SetBytes(serverConfig, random.Path, rand.Intn(randomRange.Min+randomRange.Max)+randomRange.Min)
+			serverConfig, err = sjson.SetBytes(serverConfig, random.Path, rand.Intn(randomRange.Min+randomRange.Max)+randomRange.Min)
 		}
-	}
-
-	// client config
-	for _, copyValue := range installConfig.ClientConfig.Copy {
-		clientConfig, err = sjson.SetBytes(clientConfig, copyValue.Client, gjson.GetBytes(serverConfig, copyValue.Server))
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Printf("Set server config %s failed: %s\n", random.Path, err.Error())
 			return nil, nil
 		}
 	}
 
+	if err == nil {
+		fmt.Printf("Set server config success...")
+	}
+	// client config
+	for _, copyValue := range installConfig.ClientConfig.Copy {
+		clientConfig, err = sjson.SetBytes(clientConfig, copyValue.Client, gjson.GetBytes(serverConfig, copyValue.Server).Value())
+		if err != nil {
+			fmt.Printf("Set client config %s failed: %s\n", copyValue.Client, err.Error())
+			return nil, nil
+		}
+	}
+
+	if err == nil {
+		fmt.Printf("Set client config success...")
+	}
+
 	ip, err := GetLocalIP()
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Printf("Get client ip failed: %s\n", err.Error())
 		return nil, nil
 	}
+
 	clientConfig, err = sjson.SetBytes(clientConfig, installConfig.ClientConfig.Address, ip)
 	if err != nil {
-		fmt.Println(err.Error())
+		fmt.Printf("Set client ip failed: %s\n", err.Error())
 		return nil, nil
 	}
 
@@ -66,6 +76,7 @@ func SaveConfig(path string, data []byte) {
 		fmt.Println(err.Error())
 		return
 	}
+	fmt.Printf("Save config to %s success...\n", path)
 }
 
 func GetLocalIP() (ip string, err error) {
