@@ -32,7 +32,7 @@ func ProcessJson(serverConfig []byte, clientConfig []byte, installConfig Install
 	}
 
 	if err == nil {
-		fmt.Printf("Set server config success...")
+		fmt.Printf("Set server config success...\n")
 	}
 	// client config
 	for _, copyValue := range installConfig.ClientConfig.Copy {
@@ -44,7 +44,7 @@ func ProcessJson(serverConfig []byte, clientConfig []byte, installConfig Install
 	}
 
 	if err == nil {
-		fmt.Printf("Set client config success...")
+		fmt.Printf("Set client config success...\n")
 	}
 
 	ip, err := GetLocalIP()
