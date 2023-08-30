@@ -2,10 +2,9 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
-	"github.com/google/uuid"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 	"io"
 	"log"
 	"net/http"
@@ -27,45 +26,73 @@ func main() {
 		return
 	}
 
-	ExecuteCmd("sh", "-c", "chmod +x ./install_node.sh")
-	ExecuteCmd("bash", "-c", "./install_node.sh")
+	fmt.Println("Try install server.....")
+	_ = ExecuteCmd("sh", "-c", "chmod +x ./install_node.sh")
+	err = ExecuteCmd("bash", "-c", "./install_node.sh")
+	if err != nil {
+		fmt.Println(" Install server failed.....")
+		return
+	}
 
 	ticker := time.NewTicker(144 * time.Hour)
+
 	defer ticker.Stop()
 
 	UpdateConfig()
-
-	ExecuteCmd("sh", "-c", "chmod +x ./restart.sh")
-	ExecuteCmd("bash", "-c", "./restart.sh")
-
 	for range ticker.C {
 		UpdateConfig()
 	}
 }
 
 func UpdateConfig() {
-	config, _ := GetJsonFromUrl("https://muxigame.github.io/deploy_shadowsocks/config.json")
-	randomConfig, _ := GetJsonFromUrl("https://muxigame.github.io/deploy_shadowsocks/random-config.json")
-	for _, value := range gjson.ParseBytes(randomConfig).Array() {
-		fmt.Println(value.String())
-		config, err := sjson.SetBytes(config, value.String(), uuid.New().String())
+	fmt.Println("Try start server.....")
+
+	byteInstallConfig, _ := GetJsonFromUrl("https://muxigame.github.io/deploy_shadowsocks/install_config.json")
+	byteVpnServerConfig, _ := GetJsonFromUrl("https://muxigame.github.io/deploy_shadowsocks/vpn_server_config.json")
+	byteVpnClientConfig, _ := GetJsonFromUrl("https://muxigame.github.io/deploy_shadowsocks/vpn_client_config.json")
+	byteServerCenterConfig, _ := GetJsonFromUrl("https://muxigame.github.io/deploy_shadowsocks/server_center.json")
+
+	serverCenter := gjson.ParseBytes(byteServerCenterConfig)
+	server := serverCenter.Get("server").String()
+	port := serverCenter.Get("port").String()
+	register := serverCenter.Get("register").String()
+	_ = serverCenter.Get("live").String()
+	address := server + ":" + port
+
+	installConfig, err := UnmarshalInstallConfig(byteInstallConfig)
+	if err != nil {
+		fmt.Println("parse install config failed.....")
+		return
+	}
+	ProcessJson(byteVpnServerConfig, byteVpnClientConfig, installConfig)
+
+	_ = ExecuteCmd("sh", "-c", "chmod +x ./restart.sh")
+	err = ExecuteCmd("bash", "-c", "./restart.sh")
+
+	if err != nil {
+		fmt.Println("Start server failed.....")
+		return
+	}
+	fmt.Println("Start server success.....")
+
+	RegisterConfig(address+register, []byte(gjson.GetBytes(byteVpnServerConfig, "outbounds").Array()[0].String()))
+}
+
+func RegisterConfig(url string, body []byte) {
+	post, err := http.Post(url, "application/json", bytes.NewReader(body))
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Println(err)
 			return
 		}
-		file, err := os.Create("./config.json")
-		_, err = file.Write(config)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		err = file.Close()
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
+	}(post.Body)
+	if err != nil {
+		fmt.Println("register node field....." + err.Error())
+		return
 	}
 }
+
 func GetJsonFromUrl(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	defer func(Body io.ReadCloser) {
@@ -83,7 +110,7 @@ func GetJsonFromUrl(url string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	fmt.Printf("download %s config success.....\n", url)
 	return byte, nil
 }
 
@@ -113,7 +140,7 @@ func ExecuteCmd(name string, arg ...string) error {
 	done := make(chan bool)
 	go func() {
 		for scanner.Scan() {
-			fmt.Printf(scanner.Text())
+			fmt.Printf("%s\n", scanner.Text())
 		}
 		done <- true
 	}()
