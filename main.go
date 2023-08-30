@@ -75,7 +75,10 @@ func UpdateConfig() {
 	}
 	fmt.Println("Start server success.....")
 
-	RegisterConfig(address+register, []byte(gjson.GetBytes(byteVpnServerConfig, "outbounds").Array()[0].String()))
+	registerConfig := gjson.GetBytes(byteVpnServerConfig, "outbounds").Array()[0].String()
+
+	fmt.Println("register config：" + registerConfig)
+	RegisterConfig(address+register, []byte(registerConfig))
 }
 
 func RegisterConfig(url string, body []byte) {
