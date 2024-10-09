@@ -17,16 +17,31 @@ func main() {
 
 	err := DownloadFile("https://muxigame.github.io/deploy_shadowsocks/install_node.sh", "./install_node.sh")
 	if err != nil {
-		fmt.Printf("Download file error%s", err.Error())
+		fmt.Printf("Download install_node.sh file error%s", err.Error())
 		return
 	}
 	err = DownloadFile("https://muxigame.github.io/deploy_shadowsocks/restart.sh", "./restart.sh")
 	if err != nil {
-		fmt.Printf("Download file error%s", err.Error())
+		fmt.Printf("Download restart.sh file error%s", err.Error())
 		return
 	}
 
 	fmt.Println("Try install server.....")
+
+	err = DownloadFile("https://muxigame.github.io/deploy_shadowsocks/v2ray.key", "/etc/v2ray/v2ray.key")
+	if err != nil {
+		fmt.Printf("Download v2ray.key file error%s", err.Error())
+		return
+	}
+
+	err = DownloadFile("https://muxigame.github.io/deploy_shadowsocks/v2ray.pem", "/etc/v2ray/v2ray.pem")
+	if err != nil {
+		fmt.Printf("Download v2ray.pem file error%s", err.Error())
+		return
+	}
+
+	fmt.Println("Save tls file success: /etc/v2ray/v2ray.pem")
+
 	_ = ExecuteCmd("sh", "-c", "chmod +x ./install_node.sh")
 	err = ExecuteCmd("bash", "-c", "./install_node.sh")
 	if err != nil {

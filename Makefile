@@ -1,5 +1,4 @@
 linux:
-
 	GOOS=linux go build main.go
 
 windows:
