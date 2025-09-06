@@ -15,12 +15,12 @@ import (
 
 func main() {
 
-	err := DownloadFile("https://muxigame.github.io/deploy_shadowsocks/install_node.sh", "./install_node.sh")
+	err := DownloadFile("https://Yess-VPN-Pte-Ltd.github.io/deploy_shadowsocks/install_node.sh", "./install_node.sh")
 	if err != nil {
 		fmt.Printf("Download install_node.sh file error:%s", err.Error())
 		return
 	}
-	err = DownloadFile("https://muxigame.github.io/deploy_shadowsocks/restart.sh", "./restart.sh")
+	err = DownloadFile("https://Yess-VPN-Pte-Ltd.github.io/deploy_shadowsocks/restart.sh", "./restart.sh")
 	if err != nil {
 		fmt.Printf("Download restart.sh file error:%s", err.Error())
 		return
@@ -28,13 +28,13 @@ func main() {
 
 	fmt.Println("Try install server.....")
 
-	err = DownloadFile("https://muxigame.github.io/deploy_shadowsocks/v2ray.key", "/usr/local/etc/v2ray/v2ray.key")
+	err = DownloadFile("https://Yess-VPN-Pte-Ltd.github.io/deploy_shadowsocks/v2ray.key", "/usr/local/etc/v2ray/v2ray.key")
 	if err != nil {
 		fmt.Printf("Download v2ray.key file error:%s", err.Error())
 		return
 	}
 
-	err = DownloadFile("https://muxigame.github.io/deploy_shadowsocks/v2ray.pem", "/usr/local/etc/v2ray/v2ray.pem")
+	err = DownloadFile("https://Yess-VPN-Pte-Ltd.github.io/deploy_shadowsocks/v2ray.pem", "/usr/local/etc/v2ray/v2ray.pem")
 	if err != nil {
 		fmt.Printf("Download v2ray.pem file error:%s", err.Error())
 		return
@@ -62,10 +62,10 @@ func main() {
 func UpdateConfig() {
 	fmt.Println("Try start server.....")
 
-	byteInstallConfig, _ := GetJsonFromUrl("https://muxigame.github.io/deploy_shadowsocks/install_config.json")
-	byteVpnServerConfig, _ := GetJsonFromUrl("https://muxigame.github.io/deploy_shadowsocks/vpn_server_config.json")
-	byteVpnClientConfig, _ := GetJsonFromUrl("https://muxigame.github.io/deploy_shadowsocks/vpn_client_config.json")
-	byteServerCenterConfig, _ := GetJsonFromUrl("https://muxigame.github.io/deploy_shadowsocks/server_center.json")
+	byteInstallConfig, _ := GetJsonFromUrl("https://Yess-VPN-Pte-Ltd.github.io/deploy_shadowsocks/install_config.json")
+	byteVpnServerConfig, _ := GetJsonFromUrl("https://Yess-VPN-Pte-Ltd.github.io/deploy_shadowsocks/vpn_server_config.json")
+	byteVpnClientConfig, _ := GetJsonFromUrl("https://Yess-VPN-Pte-Ltd.github.io/deploy_shadowsocks/vpn_client_config.json")
+	byteServerCenterConfig, _ := GetJsonFromUrl("https://Yess-VPN-Pte-Ltd.github.io/deploy_shadowsocks/server_center.json")
 
 	serverCenter := gjson.ParseBytes(byteServerCenterConfig)
 	server := serverCenter.Get("server").String()
